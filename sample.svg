@@ -1,0 +1,18 @@
+<svg width="640px" height="640px" version="1.1" xmlns="http://www.w3.org/2000/svg">
+<style> circle {stroke-width: 1px; stroke: black; fill:none} ._0 {fill: red} ._1 {fill: blue} .on {display: inline;} .of {display: none;} </style>
+
+    <g transform="translate(320,320)">
+    <path d="M -308 -308 h 616 v 616 h -616 v -616" fill="none" stroke="black" stroke-width="2px" />
+        <circle id="v  0" cx="   0" cy=" 300" r="3" />
+        <circle id="v  1" cx=" 176" cy=" 242" r="3" />
+        <circle id="v  2" cx=" 285" cy="  92" r="3" />
+        <circle id="v  3" cx=" 285" cy=" -92" r="3" />
+        <circle id="v  4" cx=" 176" cy="-242" r="3" />
+        <circle id="v  5" cx="   0" cy="-300" r="3" />
+        <circle id="v  6" cx="-176" cy="-242" r="3" />
+        <circle id="v  7" cx="-285" cy=" -92" r="3" />
+        <circle id="v  8" cx="-285" cy="  92" r="3" />
+        <circle id="v  9" cx="-176" cy=" 242" r="3" />
+    </g>
+
+</svg>

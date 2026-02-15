@@ -1,0 +1,128 @@
+Vertices live forever, and have some 'type' at any instant
+Edges exist between each pair of vertices and are either ON or OFF at any instant
+
+Initial conditions: nV vertices, nV(nV - 1) total edges
+
+- each vertex is assigned a type out of *2* possible types: type0 with probability p0; type1 w/ probability 1-p0
+# type0 vertices ~ B(nV, p0) and # type1 vertices ~ B(nV, 1-p0)
+
+- probability of an edge between any pair of vertices being ON is pE
+Hence # neighbours a given vertex ~ B(nV - 1 , pE)
+and # total ON edges ~ B((nV - 1)*nV/2 , pE)
+what about numbers of like/unlike neighbours? # type0 neighbours ~ B(nV - 1 , pE*p0)
+Bear in mind that these distributions are solely relevant to the starting/seed state.
+
+
+@ implementations
+nV hardcoded manually
+draw a 1D array V of nV numbers (corresponding to the nV vertices) from a uniform real distribution 
+  np.random.uniform produces numbers in [0,1)
+let's make all elements that are < p0 True and the rest False 
+all vertices with value True shall take type0 and the rest take type1
+
+draw a 2D array F of nV*nV numbers (corresponding to an edge matrix) uniformly from [0,1)
+The goal is to make this a symmetric boolean matrix (with main diagonal zeros) such that each of the other elements has probability pE of being 1
+
+let's make all elements that are < P True and the rest False. each element now has probability P of being True
+now compute a new matrix E = F AND F.transpose
+AND returns True only for inputs True and True
+Main diagonal entries have probability P of being True because they are being ANDed with themselves - 0 AND 0 returns 0 and 1 AND 1 returns 1, which changes nothing.
+All other entries are the AND of two independent inputs, and so have probability P^2 of being True
+
+since we performed a commutative operation on a matrix and its transpose, the result is a symmetric matrix. we can use np.fill_diagonal on E to set the main diagonal to zeros (Falses) as per our requirement that self edges should never be on
+
+we also required that the probability of each entry of E being 1 was pE -- if we choose P to be sqrt(pE), then P^2 = pE
+
+    ----
+    ----
+
+
+Dynamics: vertices switch types, edges toggle ON/OFF
+
+three principles to settle on:
+• whether the change in state of the network at a given instant should depend solely on its state in the present moment, or on on past states/dynamics ("history")
+[no history - can't apply history to 0th state as it did not exist then - 0th was randomly set]
+• whether time should be continuous or discrete 
+[discrete: "update steps"/'time steps'. no rates, delays, etc too much unwarranted complication]
+• whether the types should be symmetric - that is, apart from the initial proportions of each in the network, should the different types behave differently in terms of dynamics coefficients, or should they be indistinguishable
+[asymmetric - coefficient/probability table includes 'which type?' - does not sit well to have two types who are identical in all ways other than 'not being each other'. symmetry is a special case of asymmetry, better to make the program generic at the start]
+
+
+
+    ---- --
+
+whether the ith vertex changes type or not at a particular instant is probabilistic - 
+depends on both its own type (due to asymmetry) as well as the types of neighbours, as a function
+    f: V[i] ∈ 𝔹, Ni ∈ {0 .. nV-1}, Ui ∈ {0 .. nV-1} ⟶ pX ∈ [0,1]
+
+ways to approach like/unlike neighbours
+  number vs proportion, threshold?
+  powers, eg cbrt([0,1]); shift offset eg 0.2 + 0.8*[0,1]
+factors that affect are 'inertia' and 'influence'
+
+consider BOUNDARY CASES:- all unlike; no unlike; no neighbours at all
+consider response of p to small changes in proportion
+consider how p can account for the block-size of the proportion as well apart from just the float
+account for where the type-specific coefficient can come. obvious how with a threshold. maybe an exponent 1/Q as in cbrt, or a log_Q
+
+even with no unlike neighbours there should still be some small probability of switching
+similarly with all unlike neighbours there should be some small probability of not switching
+and with no neighbours at all there should also be small probability of switching
+
+behaviours to AVOID
+- determinism, ie p returning as 0.0 or 1.0, == will/wont switch
+- everything switching over to the same type very rapidly
+
+pX = Ai + (Bi - Ai)*Ui/(Ni+1)    Ai,Bi ∈ (0,1)
+Ui/(Ni+1) is a 'tweaked' proportion of unlike (added 1 to denominator to avoid DivBy0 when no neighbours) with range [0, 1-1/#]
+pX is a linear function of the tweaked proportion, that takes Ai at 0 and Bi at 1 (Bi is never returned as 1 is never reached)
+Ai and Bi are coefficients that could either be properties of the type, or of the individual vertex regardless of its present-instant type
+let's make them properties of the type - this embodies the asymmetry. also having it for each vertex necessitates yet another distribution to sample from
+
+
+
+    ----  --
+
+   should i be considering edges 'toggling vs not' or 'being on vs not' - should consider change I think, inertia
+whether a given edge toggles or not at a particular instant is probabilistic - 
+depends on its current ON/OFFness, the types of the vertices it connects, and maybe even the number of mutual neighbours they have (as a measure of degree of connectedness b/w the vertices in question)
+
+there are two probability functions here - one for edges coming on, one for edges going off - these are two different actions
+for edges coming ON: i want a function that makes it somewhat likely for vertices with high numbers of mutual neighbours to come on, but at the same time not make it such that an isolated vertex never gets connectivity. how if at all should this function account for the types?
+the number of mutual neighbours between any two vertices ~ B(nV - 2 , pE^2)
+
+
+
+for edges going OFF: this p can be independent of the vertices in question - its purpose would be to maintain an equilibrium in the total number of ON edges, returning it to the proportion pE.  possible fn is nE^2/(nV(nV - 1))^2, where pOFF is the square of the current proportion. 
+
+If it is a constant, then in the absence of edges turning ON there will be an exponential decay in nE; dnE/dt = -(p)*nE »»» nE = e^-tp
+(I don't know how to account for turning on rate as it is probabilistic and complicated)
+If it equals the proportion of ON edges, dnE/dt = -(nE/nV(nV - 1))*nE = -nE^2/nV(nV - 1) »»» t = nV(nV - 1)/nE »»» nE = nV(nV - 1)/t
+If it equals that proportion^2, dnE/dt = -(nE^2/(nV(nV - 1))^2)*nE = -nE^3/(nV(nV - 1))^2 »»» t = (nV(nV - 1))^2/2*nE^2 »»» nE = nV(nV - 1)/sqrt(2t)
+
+
+
+    ----
+    ----
+
+
+Glossary
+--------
+counts:
+  nV, of vertices
+  nE, of edges
+  Ni, of total neighbours
+  Ui, of unlike neighbours
+
+probabilities: 
+  p0, of any vertex having type0 in the initial network condition
+  pE, of any edge being ON in the initial network condition
+  P, of any entry in the matrix F being True
+
+arrays:
+  V (nV,) of random floats in [0,1) and subsequently Bools corresponding to the types of the nV vertices
+  F (nV, nV) of random floats in [0,1) and subsequently Bools
+  E (nV, nV) and symmetric, of Bools corresponding to edges between each pair of vertices
+
+functions:
+  f(), gives the probability of a particular vertex switching type

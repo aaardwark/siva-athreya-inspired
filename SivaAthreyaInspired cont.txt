@@ -1,0 +1,71 @@
+Revision of some ideas... basic setup and the core concepts remain the same. 
+Mainly concerned about my approach toward the probability functions that determine type/state switching for the vertices and edges.
+
+Somewhere I have let myself be influenced by some notion that reaching a trivial equilibrium is undesirable, and that the only acceptable equilibrium is non-degenerate. 
+This led to my considering functions that smacked of arbitrariness (of course I now run the risk of being biased against arbitrariness, but that at least is sensible)
+
+I should be alright with, for instance, a vertex having zero probability of switching at some instant because all its neighbours are like. "It is what it is." would apply to the results of simulations too.
+
+So the vertex switching probability should be given by some non-arbitrary function on two variables, nNeighbors and nUnlike from the same set [0,nV] with nUnlike ≤ nNeighbours. 
+Ideally it should also be a generic form of function to provide scope for coefficients/exponents to embody the asymmetry. Think about this a little more, but not for too long.
+
+For edge-switching, need to mention another implicit principle: everything is decided locally (separate point from markov chain). For example the vertex switches based on its immediate neighbours *only*. An edge belongs to two vertices, so it should change based on nothing other than _their_ neighbours ("nothing other than" is to not preclude the possibility of fixed probability)
+---------------------------
+
+New proposal for the tweaked proportion of unlike neighbours: (Ui + 1/2)/(Ni + 1)
+Has advantages of never becoming deterministic, but very closely approaching it when all/none neighbours...
+also that the deviation from 0/1 probability is directly related to the the significance, or total neighbour count.
+Can exponentiate this tweaked proportion for the complete probability function. The exponent is a property of the type.
+
+If tw_p is used directly as chance of change, then a type0 and a type1 with identical neighbours both have the same probability of being type1 in the next instant. that is, tw_p controls not just chance of change, but chance of _state_. 
+Ui for the type0 is Ni-Ui for the type1, so the p of the type0 changing is the same as the p of the type1 not changing. f(Ui,Ni) == 1 - f(Ni-Ui,Ni)
+exponentiation adds the concavity that removes symmetry, and means controlling chance of change only.
+
+
+Considered and rejected: some form of cubic on the tweaked proportion; varying the 1/2 and 1 as part of the asymmetry; 
+
+To start with, can simulate 3 reps with equal proportion of vertices but different exponents, to see what happens. Can then try 40-60, 25-75 etc. Should take care to choose a considerable number of vertices, few tens, but not so many that computation, visualisation, analysis become cumbersome. About 30, that is the threshold n for good sample.
+Idea of live simulation, whereby I have the option of manually instructing for each update from a browser UI, or letting it loop. The live will be useful in that if I can control python execution from the browser (or even a terminal), while simultaneously visualising output, I don't have to worry about saving-reading, how many updates, equilibrium-checking etc
+---------------------------
+
+Regarding edge switching. 
+Classic SA would have: fixed p matrix for each edge based on current-connectedness & A-B
+SAI wishes to take into account _mutual neighbours_ (and their states?)
+
+
+Assuming present instant can be described by initial condition ps, consider two randomly selected vertices.
+  their types are as likely as: {0-0: p0*p0, 0-1: 2*p0*(1-p0), 1-1: (1-p0)*(1-p0)}
+  the chance the edge b/w them is connected is pE
+
+  # neighbours for each vertex individually is nNeighbors ~ B(nV - 1 , pE)
+    # type0 and type1 neighbours have 'success' probabilities of p0*pE and (1-p0)*pE respvly
+
+  # mutual neighbours is nMutual ~ B(nV - 2 , pE^2)
+    # type0 and type1 mutual neighbours have 'success' probabilities of p0*pE^2 and (1-p0)*pE^2 respvly
+
+Given: 
+ type_vA, 0neighbours_vA, 1neighbours_vA
+ 0neighbours_mutual, 1neighbours_mutual
+ type_vB, 0neighbours_vB, 1neighbours_vB
+Decide probability of change.
+-----------------
+Define two parameters called 'connectivity' and 'affinity'
+The probability of an edge coming on shall depend on both connectivity and affinity
+The probability of an edge going off shall depend only on affinity, as it is already connected
+
+Unlike transitions between the two possible states of a vertex, transitions from on>off and off>on are qualitatively different. It can be argued that the states are qualitatively different too (citing different exponents and asymmetry), but this is a different level of qualitative difference.
+
+
+affinity is a function of the tweaked proportions of vertex types
+affinity of a pair of vertices := harmonic mean of the TwPr's of the *opposite* types as those vertices
+for example if there are 20 type0 and 6 type1 vertices, and the proportions are prop0 (20.5/27) and prop1 (6.5/27), the affinity of a pair of type1 vertices would be sqrt(prop0 * prop0) = √(420.25/729) ≈ 0.76, a rather high value reflecting their minority status in the network. general rule: less dominant, higher affinity factor. 
+
+This definition breaks the local-factors-only by assuming the vertices "know" their type's dominance. 
+(another quibble: if their types keep changing why are they so attached? this suggests the simulation should be slowed down to make sense logically. counterargument could be that taking time averages of properties of interest or looking at longer term trends makes this quibble irrelevant.)
+
+
+connectivity b/w a pair of vertices := 0.5 * (M/A + M/B) where A,B = # neighbours, and M = # mutual neighbours
+In words, the arithmetic mean of the tweaked proportions of the mutual neighbour counts (identical for both, obviously) against the total neighbour counts, of each. This does not account for the types of neighbours at all.
+
+Let pOFF = 1-affinity, 
+and pON = connectivity^(1/affinity) = the affinity'th root of connectivity, written that way since affinity is a float in (0,1)
