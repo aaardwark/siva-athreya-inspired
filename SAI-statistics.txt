@@ -1,0 +1,24 @@
+What are the various parameters of the system that I am interesting in plotting against time?
+
+BULK properties:
+  breakup of the nV vertices into type0 and type1
+    against the total nV ?
+
+  number of ON edges, and the breakup into 0-0, 0-1 and 1-1
+  distributions (separate for the types, combined as well) of neighbour count and like-unlike breakup
+
+-----------------
+
+Search for a regime where the initial conditions (apart from nV) namely p0 and pE, 
+do make a difference to long term dynamics
+Conversely, ascertain that there is no such regime -- and that only a0,a1 control dynamics
+
+Make a phase space of a0 and a1 (a triangle with a0 < a1) 
+map out the vertex and edge behaviour for various points (combinations a0,a1) in that space
+A high value of ai means that typei will have a low sensitivity to opposing influence, and so will come to dominate
+
+Of interest is the Fourier transform of the vertices
+along with mean & stdev (/ boxplot)
+
+Keep an open mind about experimenting with different versions of the core features of the system
+such as changing how the affinity works, etc

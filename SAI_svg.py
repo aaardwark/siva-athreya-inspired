@@ -63,3 +63,21 @@ def style_updates_as_json(vertices_ref, edges_ref, vertices_target, edges_target
     })
 
 
+
+# This function is safer as it returns all styles always.
+# Too risky to rely on valid knowledge of displayed state,
+# particularly when multiple viewers (nb, chrome) possible
+def all_styles_as_json(vertices, edges):
+    v_1_idxs = npformat('%03d', np.nonzero(vertices))
+    v_0_idxs = npformat('%03d', np.nonzero(~vertices))
+    e_1_idxs = npformat('%03d', np.nonzero(edges))
+    e_0_idxs = npformat('%03d', np.nonzero(~edges))
+
+    return json.dumps({
+            '_1': list('V' + v_1_idxs[0]),
+            '_0': list('V' + v_0_idxs[0]),
+            'on': list('E' + e_1_idxs[0] + e_1_idxs[1]),
+            'of': list('E' + e_0_idxs[0] + e_0_idxs[1])
+        })
+
+

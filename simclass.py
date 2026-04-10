@@ -100,8 +100,12 @@ class simmem:
 
 
     def _create_ext_chunk(self):
-        self._V.append(np.zeros((self._ext_chk_size, self.nV)))
-        self._E.append(np.zeros((self._ext_chk_size, self.nV,self.nV)))
+        self._V.append(
+            np.zeros((self._ext_chk_size, self.nV), dtype=np.bool),
+        )
+        self._E.append(
+            np.zeros((self._ext_chk_size, self.nV,self.nV), dtype=np.bool)
+        )
         self._curr_chk_i += 1
 
 
